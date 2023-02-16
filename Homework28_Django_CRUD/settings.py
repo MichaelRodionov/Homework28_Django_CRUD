@@ -123,10 +123,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ----------------------------------------------------------------
 # paths for csv files
-ADS_PATH = os.path.join(BASE_DIR, 'ads', 'data', 'ad.csv')
+ADS_CSV = os.path.join(BASE_DIR, 'datasets', 'ad.csv')
+CAT_CSV = os.path.join(BASE_DIR, 'datasets', 'category.csv')
+LOC_CSV = os.path.join(BASE_DIR, 'datasets', 'location.csv')
+US_CSV = os.path.join(BASE_DIR, 'datasets', 'user.csv')
 
-CAT_PATH = os.path.join(BASE_DIR, 'ads', 'data', 'category.csv')
-
-LOC_PATH = os.path.join(BASE_DIR, 'users', 'data', 'location.csv')
-
-US_PATH = os.path.join(BASE_DIR, 'users', 'data', 'user.csv')
+ADS_JSON = os.path.join(BASE_DIR, 'fixtures', 'ad.json')
+CAT_JSON = os.path.join(BASE_DIR, 'fixtures', 'category.json')
+LOC_JSON = os.path.join(BASE_DIR, 'fixtures', 'location.json')
+US_JSON = os.path.join(BASE_DIR, 'fixtures', 'user.json')

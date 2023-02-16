@@ -9,7 +9,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView, UpdateView, DeleteView, CreateView
 
 from Homework28_Django_CRUD import settings
-from Homework28_Django_CRUD.utils import fill_database
 from ads.models import Category, Advertisement
 
 
@@ -23,7 +22,6 @@ def check_response(request) -> JsonResponse:
     :param request: request
     :return: JsonResponse
     """
-    fill_database()
     return JsonResponse({
         'status': 'OK'
     }, status=200)

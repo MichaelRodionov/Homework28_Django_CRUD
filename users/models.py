@@ -1,4 +1,4 @@
-from django.db.models import Model, CharField, IntegerField, ForeignKey, CASCADE, FloatField, AutoField
+from django.db.models import Model, CharField, IntegerField, ForeignKey, CASCADE, FloatField, AutoField, ManyToManyField
 
 
 # ----------------------------------------------------------------
@@ -25,7 +25,7 @@ class User(Model):
     password = CharField(max_length=50)
     role = CharField(max_length=50)
     age = IntegerField()
-    location = ForeignKey(Location, on_delete=CASCADE)
+    locations = ManyToManyField('users.Location')
 
     def __str__(self):
         return self.username
@@ -33,5 +33,3 @@ class User(Model):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-
-

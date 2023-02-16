@@ -30,7 +30,7 @@ class UserListView(ListView):
         users: QuerySet = self.object_list.annotate(
             total_ads=Count('advertisement', filter=Q(
                 advertisement__is_published=True))).\
-            select_related('location').order_by('username')
+            prefetch_related('locations').order_by('username')
 
         paginator = Paginator(users, settings.TOTAL_ON_PAGE)
         page_number = request.GET.get('page')
@@ -42,7 +42,6 @@ class UserListView(ListView):
             'last_name': user.last_name,
             'role': user.role,
             'age': user.age,
-            # 'location': user.location.name,
             'locations': list(map(str, user.locations.all())),
             'total_ads': user.total_ads,
         } for user in page_obj]
@@ -73,14 +72,14 @@ class UserDetailView(DetailView):
             'last_name': user.last_name,
             'role': user.role,
             'age': user.age,
-            'location': user.location.name,
+            'locations': list(map(str, user.locations.all().values_list('name', flat=True))),
         }, status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UserCreateView(CreateView):
     model = User
-    fields = ['username', 'password', 'first_name', 'last_name', 'role', 'age', 'location']
+    fields = ['username', 'password', 'first_name', 'last_name', 'role', 'age', 'locations']
 
     def post(self, request, *args, **kwargs) -> JsonResponse:
         """
@@ -93,32 +92,42 @@ class UserCreateView(CreateView):
         super().post(request, *args, **kwargs)
         try:
             user_data = json.loads(request.body)
-            location, _ = Location.objects.get_or_create(name=user_data['location'], defaults={
+            user = User.objects.create(
+                username=user_data['username'],
+                password=user_data['password'],
+                first_name=user_data['first_name'],
+                last_name=user_data['last_name'],
+                age=user_data['age'],
+                role=user_data['role']
+            )
+            for location in user_data['locations']:
+                location_obj, _ = Location.objects.get_or_create(name=location, defaults={
                     'lat': 11.110, 'lng': 15.011
                 })
-            user_data['location'] = location
-            user = User.objects.create(**user_data)
+                user.locations.add(location_obj)
+
             user.save()
-            return JsonResponse({
-                'username': user.username,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'role': user.role,
-                'age': user.age,
-                'location': user.location.name,
-            }, status=200)
         except Exception:
             return JsonResponse({'error': 'Invalid request'}, status=400)
+        return JsonResponse({
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': user.role,
+            'age': user.age,
+            'locations': list(map(str, user.locations.all().values_list('name', flat=True))),
+        }, status=200)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UserUpdateView(UpdateView):
     model = User
-    fields = ['username', 'first_name', 'last_name', 'role', 'age', 'location']
+    fields = ['username', 'first_name', 'last_name', 'role', 'age', 'locations']
 
-    def patch(self, request, *args, **kwargs) -> JsonResponse:
+    def put(self, request, *args, **kwargs) -> JsonResponse:
         """
-        View to handle PATCH request to update user and create new location if it doesn't exist
+        View to handle PUT request to update user and create new location if it doesn't exist
         :param request: request
         :param args: positional arguments
         :param kwargs: keyword arguments
@@ -127,17 +136,18 @@ class UserUpdateView(UpdateView):
         super().post(request, *args, **kwargs)
         try:
             user_data = json.loads(request.body)
-            if 'location' in user_data:
-                location, _ = Location.objects.get_or_create(name=user_data['location'], defaults={
-                    'lat': 11.110, 'lng': 15.011
-                })
-                user_data['location'] = location
-                self.object.location = user_data['location']
             self.object.username = user_data['username']
             self.object.password = user_data['password']
             self.object.first_name = user_data['first_name']
             self.object.last_name = user_data['last_name']
             self.object.age = user_data['age']
+
+            for location in user_data['locations']:
+                location_obj, _ = Location.objects.get_or_create(name=location, defaults={
+                    'lat': 11.110, 'lng': 15.011
+                })
+                self.object.locations.add(location_obj)
+
             self.object.save()
         except Exception:
             return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -147,7 +157,7 @@ class UserUpdateView(UpdateView):
             'last_name': self.object.last_name,
             'role': self.object.role,
             'age': self.object.age,
-            'location': self.object.location.name,
+            'locations': list(map(str, self.object.locations.all().values_list('name', flat=True))),
         }, status=200)
 
 
